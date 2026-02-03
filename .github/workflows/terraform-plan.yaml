@@ -116,6 +116,7 @@ jobs:
               --output matrix > matrix.json
             
             echo "Dependency mapper output:"
+            cat matrix.json
             matrix_content=$(cat matrix.json)
           fi
 
