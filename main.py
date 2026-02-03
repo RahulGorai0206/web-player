@@ -815,14 +815,17 @@ def video_feed():
 # --- SIMPLE PLAYER ROUTE (Raw Range Requests) ---
 @app.route('/raw_stream')
 def raw_stream():
-    """Serves the raw file allowing seeking without transcoding."""
+    """Serves the raw file using a generator to prevent RAM spikes."""
     if not current_file_path: return "No file", 404
     
-    # Handle Range Header for seeking
+    file_size = os.path.getsize(current_file_path)
     range_header = request.headers.get('Range', None)
-    if not range_header: return send_file(current_file_path)
 
-    size = os.path.getsize(current_file_path)
+    # If no range header, send the whole file (flask send_file handles streaming automatically)
+    if not range_header:
+        return send_file(current_file_path)
+
+    # Parse Range Header
     byte1, byte2 = 0, None
     m = re.search(r'(\d+)-(\d*)', range_header)
     g = m.groups()
@@ -830,16 +833,41 @@ def raw_stream():
     if g[0]: byte1 = int(g[0])
     if g[1]: byte2 = int(g[1])
 
-    length = size - byte1
-    if byte2 is not None: length = byte2 + 1 - byte1
+    # Calculate length
+    if byte2 is not None:
+        length = byte2 + 1 - byte1
+    else:
+        length = file_size - byte1
 
-    data = None
-    with open(current_file_path, 'rb') as f:
-        f.seek(byte1)
-        data = f.read(length)
+    # generator to stream file in 8KB chunks
+    def generate():
+        try:
+            with open(current_file_path, 'rb') as f:
+                f.seek(byte1)
+                remaining = length
+                chunk_size = 8192 
+                while remaining > 0:
+                    # Read whichever is smaller: the standard chunk or remaining bytes
+                    read_size = min(chunk_size, remaining)
+                    data = f.read(read_size)
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+        except Exception as e:
+            logger.error(f"Stream Error: {e}")
 
-    rv = Response(data, 206, mimetype=mimetypes.guess_type(current_file_path)[0], direct_passthrough=True)
-    rv.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(byte1, byte1 + length - 1, size))
+    # Set byte2 for the header if it was None
+    end_byte = byte2 if byte2 is not None else file_size - 1
+
+    rv = Response(
+        generate(), 
+        206, 
+        mimetype=mimetypes.guess_type(current_file_path)[0], 
+        direct_passthrough=True
+    )
+    rv.headers.add('Content-Range', f'bytes {byte1}-{end_byte}/{file_size}')
+    rv.headers.add('Accept-Ranges', 'bytes')
     return rv
 
 if __name__ == '__main__':
