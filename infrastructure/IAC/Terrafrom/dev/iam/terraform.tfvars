@@ -8,5 +8,5 @@ service_account_configs = {
   dev-cloud-run-sa = {
     service_account_name = "dev-cloud-run-sa"
     project_level_roles  = ["roles/run.invoker", "roles/run.viewer"]
-}
+  }
 }

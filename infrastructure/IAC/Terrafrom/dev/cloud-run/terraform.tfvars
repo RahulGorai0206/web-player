@@ -36,7 +36,7 @@ cloud_run = {
           period_seconds        = 240
           failure_threshold     = 2
           tcpSocket = {
-            port         = 5500
+            port = 5500
           }
         }
       }
