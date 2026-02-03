@@ -32,6 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       dev_matrix: ${{ steps.dirs.outputs.dev_matrix }}
+      GCP_PROJECT_DEV: ${{ env.GCP_PROJECT_DEV }}
+      GCP_INFRA_IDP: ${{ env.GCP_INFRA_IDP }}
+      GCP_INFRA_GHA_SERVICE_ACCOUNT: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -115,6 +118,6 @@ jobs:
     with:
       matrix: ${{ needs.detect-changes.outputs.dev_matrix }}
       environment: "dev"
-      GCP_PROJECT_DEV: ${{ env.GCP_PROJECT_DEV }}
-      GCP_INFRA_IDP: ${{ env.GCP_INFRA_IDP }}
-      GCP_INFRA_GHA_SERVICE_ACCOUNT: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
+      GCP_PROJECT_DEV: ${{ needs.detect-changes.GCP_PROJECT_DEV }}
+      GCP_INFRA_IDP: ${{ needs.detect-changes.GCP_INFRA_IDP }}
+      GCP_INFRA_GHA_SERVICE_ACCOUNT: ${{ needs.detect-changes.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
