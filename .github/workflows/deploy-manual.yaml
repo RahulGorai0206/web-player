@@ -4,16 +4,11 @@ name: Deploy Docker image to Cloud Run Job
 on:
   workflow_dispatch:
     inputs:
-      push-to-registry:
-        description: 'Whether to push the app image to artifact registry.'
-        type: boolean
-        required: false
-        default: true
       gcp-project-id:
         type: string
         required: false
         default: "rahul-playground-v1"
-      cloudrun_job_name:
+      cloudrun_name:
         description: "Cloud Run Service name."
         type: string
         required: false
@@ -27,6 +22,5 @@ jobs:
   build_app:
     uses: ./.github/workflows/build-deploy.yaml
     with:
-      push-to-registry: ${{ inputs.push-to-registry }}
       gcp-project-id: ${{ inputs.gcp-project-id }}
-      cloudrun_job_name: ${{ inputs.cloudrun_job_name }}
+      cloudrun_name: ${{ inputs.cloudrun_name }}

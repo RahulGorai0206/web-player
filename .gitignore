@@ -4,3 +4,7 @@ __pycache__/
 *.pyc
 *.html
 /downloads/
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
