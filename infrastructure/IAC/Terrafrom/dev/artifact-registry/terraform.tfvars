@@ -24,7 +24,7 @@ repo = {
         condition = {
           tag_state    = "TAGGED",
           tag_prefixes = ["main", "master"]
-          older_than   = "30d"
+          older_than   = "10d"
         }
       },
       "policy_3" = {
