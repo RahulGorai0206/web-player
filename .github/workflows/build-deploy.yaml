@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Docker login to GAR
-        uses: rahulgorai0206/github-actions/.github/actions/setup-docker-login
+        uses: rahulgorai0206/github-actions/.github/actions/setup-docker-login@master
         with:
           registry-type: 'GAR'
           workload-identity-provider: ${{ vars.GCP_IDP_DEV }}
@@ -65,7 +65,7 @@ jobs:
           cache-from: type=gha
 
       - name: Deploy to Cloud Run in GCP project
-        uses: rahulgorai0206/github-actions/.github/actions/cloudrun-deploy
+        uses: rahulgorai0206/github-actions/.github/actions/cloudrun-deploy@master
         with:
           gcp-project-id: ${{ inputs.gcp-project-id }}
           job-name: ${{ inputs.cloudrun_name }}

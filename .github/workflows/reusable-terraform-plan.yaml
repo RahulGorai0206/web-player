@@ -11,10 +11,13 @@ on:
         type: string
       GCP_PROJECT_DEV:
         required: false
+        type: string
       GCP_INFRA_IDP:
-        required: false
+        required: true
+        type: string
       GCP_INFRA_GHA_SERVICE_ACCOUNT:
         required: false
+        type: string
 
 permissions:
   contents: "read"
