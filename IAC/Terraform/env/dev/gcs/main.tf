@@ -1,5 +1,5 @@
 module "gcs_bucket" {
-  source             = "../../modules/cloud_storage"
+  source             = "../../../modules/cloud_storage"
   project_id         = var.project_id
   for_each           = var.gcs_bucket
   name               = each.value.app_name

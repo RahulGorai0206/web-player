@@ -25,11 +25,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  GCP_PROJECT_DEV: rahul-playground-v1
-  GCP_INFRA_IDP: projects/795562109685/locations/global/workloadIdentityPools/github/providers/dev-github-provider
-  GCP_INFRA_GHA_SERVICE_ACCOUNT: dev-github-oauth-sa@rahul-playground-v1.iam.gserviceaccount.com
-
 jobs:
   terraform-fmt:
     name: Terraform Fmt
@@ -50,9 +45,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       dev_matrix: ${{ steps.set-matrix.outputs.dev_matrix }}
-      GCP_PROJECT_DEV: ${{ env.GCP_PROJECT_DEV }}
-      GCP_INFRA_IDP: ${{ env.GCP_INFRA_IDP }}
-      GCP_INFRA_GHA_SERVICE_ACCOUNT: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -73,8 +65,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: tj-actions/changed-files@v44
         with:
-          files: |
-            infrastructure/IAC/Terraform/**
+          files: IAC/Terraform/**
           write_output_files: true
           json: true
           escape_json: false
@@ -110,10 +101,13 @@ jobs:
             cat .github/outputs/all_changed_files.json
             
             # Run the dependency mapper
+            echo "Running dependency mapper..."
             python3 scripts/tf_dep_map.py \
               --changed-files .github/outputs/all_changed_files.json \
               --output matrix > matrix.json
             
+            echo "Dependency mapper output:"
+            cat matrix.json
             matrix_content=$(cat matrix.json)
           fi
 
@@ -127,6 +121,8 @@ jobs:
              dev_matrix=$(echo "$matrix_content" | jq -c '[.[] | select(.env == "dev")]')
              
              echo "dev_matrix=${dev_matrix}" >> $GITHUB_OUTPUT
+
+             echo "dev_matrix: $dev_matrix"
           fi
 
   terraform-plan-dev:
@@ -136,6 +132,6 @@ jobs:
     with:
       matrix: ${{ needs.detect-changes.outputs.dev_matrix }}
       environment: "dev"
-      GCP_PROJECT_DEV: ${{ needs.detect-changes.GCP_PROJECT_DEV }}
-      GCP_INFRA_IDP: ${{ needs.detect-changes.GCP_INFRA_IDP }}
-      GCP_INFRA_GHA_SERVICE_ACCOUNT: ${{ needs.detect-changes.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
+      GCP_PROJECT_DEV: "rahul-playground-v1"
+      GCP_INFRA_IDP: "projects/795562109685/locations/global/workloadIdentityPools/github/providers/dev-github-provider"
+      GCP_INFRA_GHA_SERVICE_ACCOUNT: "dev-github-oauth-sa@rahul-playground-v1.iam.gserviceaccount.com"

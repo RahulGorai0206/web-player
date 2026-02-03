@@ -17,7 +17,7 @@ Basic usage of this module is as follows:
 
 ```
 module "gcs" {
-  source           = "../../../modules/cloud-storage"
+  source           = "../../../../modules/cloud-storage"
   project_id       = var.service_project_id
   location         = var.region
   count            = length(var.gcs_buckets)

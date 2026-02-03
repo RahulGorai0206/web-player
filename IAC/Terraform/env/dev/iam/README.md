@@ -23,9 +23,9 @@ This module makes it easy to create custom roles and Perform role bindings for I
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloud_dns"></a> [custom_role_gke](#module\_cloud_dns_) | ../../../../modules/iam/custom-role | n/a |
-| <a name="module_cloud_dns"></a> [service_account_gke](#module\_cloud_dns_) | ../../../../modules/iam/ | n/a |
-| <a name="module_cloud_dns"></a> [member_roles_gke](#module\_cloud_dns_) | ../../../../modules/iam/member-iam | n/a |
+| <a name="module_cloud_dns"></a> [custom_role_gke](#module\_cloud_dns_) | ../../../../../modules/iam/custom-role | n/a |
+| <a name="module_cloud_dns"></a> [service_account_gke](#module\_cloud_dns_) | ../../../../../modules/iam/ | n/a |
+| <a name="module_cloud_dns"></a> [member_roles_gke](#module\_cloud_dns_) | ../../../../../modules/iam/member-iam | n/a |
 
 
 
@@ -50,7 +50,7 @@ Basic usage of this module is as follows:
 
 ```hcl
 module "custom_role_gke" {
-  source      = "../../../../modules/iam/custom-role"
+  source      = "../../../../../modules/iam/custom-role"
   project     = var.service_project_id
   role_id     = var.service_account_gke["role_name"]
   permissions = var.service_account_gke["permissions"]
@@ -61,7 +61,7 @@ module "custom_role_gke" {
 
 ```hcl
 module "service_account_gke" {
-  source               = "../../../../modules/iam/service-account-new"
+  source               = "../../../../../modules/iam/service-account-new"
   project_id           = var.service_project_id
   service_account_name = var.service_account_gke["service_account"]
 }
@@ -71,7 +71,7 @@ module "service_account_gke" {
 
 ```hcl
 module "member_roles_gke" {
-  source                  = "../../../../modules/iam/member-iam"
+  source                  = "../../../../../modules/iam/member-iam"
   service_account_address = module.service_account_gke.email
   project                 = var.service_project_id
   project_roles           = ["projects/${var.service_project_id}/roles/${var.service_account_gke["role_name"]}", "roles/secretmanager.secretAccessor", ]

@@ -1,5 +1,5 @@
 module "cloud_run_v2" {
-  source                           = "../../modules/cloud-run"
+  source                           = "../../../modules/cloud-run"
   for_each                         = var.cloud_run
   project_id                       = var.service_project_id
   service_name                     = each.value.service_name
