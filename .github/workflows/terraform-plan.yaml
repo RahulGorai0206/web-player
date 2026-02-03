@@ -110,10 +110,12 @@ jobs:
             cat .github/outputs/all_changed_files.json
             
             # Run the dependency mapper
+            echo "Running dependency mapper..."
             python3 scripts/tf_dep_map.py \
               --changed-files .github/outputs/all_changed_files.json \
               --output matrix > matrix.json
             
+            echo "Dependency mapper output:"
             matrix_content=$(cat matrix.json)
           fi
 
