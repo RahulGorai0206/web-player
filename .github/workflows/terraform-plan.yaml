@@ -127,6 +127,8 @@ jobs:
              dev_matrix=$(echo "$matrix_content" | jq -c '[.[] | select(.env == "dev")]')
              
              echo "dev_matrix=${dev_matrix}" >> $GITHUB_OUTPUT
+
+             echo "dev_matrix: $dev_matrix"
           fi
 
   terraform-plan-dev:
