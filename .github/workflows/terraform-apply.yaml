@@ -55,8 +55,7 @@ jobs:
         if: github.event_name == 'push'
         uses: tj-actions/changed-files@v44
         with:
-          files: |
-            infrastructure/IAC/Terraform/**
+          files: IAC/Terraform/**
           write_output_files: true
           json: true
           escape_json: false
