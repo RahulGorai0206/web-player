@@ -18,13 +18,13 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
     issuer_uri = "https://token.actions.githubusercontent.com"
   }
   attribute_mapping = {
-    "google.subject"       = "assertion.sub"
-    "attribute.actor"      = "assertion.actor"
-    "attribute.repository" = "assertion.repository"
-    # "attribute.repository_owner" = "assertion.repository_owner"
+    "google.subject"             = "assertion.sub"
+    "attribute.actor"            = "assertion.actor"
+    "attribute.repository"       = "assertion.repository"
+    "attribute.repository_owner" = "assertion.repository_owner"
   }
 
-  attribute_condition = "assertion.repository == '${var.github_owner}/web-player'"
+  attribute_condition = "assertion.repository_owner == '${var.github_owner}'"
 }
 
 resource "google_service_account_iam_member" "impersonate_binding" {
