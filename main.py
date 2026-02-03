@@ -65,6 +65,7 @@ def detect_hardware_encoders():
             if CURRENT_HW_MODE == 'cpu': CURRENT_HW_MODE = 'amf'
     except Exception as e:
         logger.warning(f"Could not detect encoders: {e}")
+    CURRENT_HW_MODE = 'cpu'
     logger.info(f"Defaulting to: {CURRENT_HW_MODE}")
 
 detect_hardware_encoders()
