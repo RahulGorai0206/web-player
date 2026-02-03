@@ -1,0 +1,120 @@
+name: "Terraform Apply"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      stacks:
+        description: 'Stacks to run (space separated relative paths, or "all")'
+        required: true
+        default: 'all'
+      environment:
+        description: 'Environment to run (optional)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - dev
+
+permissions:
+  contents: "read"
+  id-token: "write"
+
+env:
+  GCP_PROJECT_DEV: rahul-playground-v1
+  GCP_INFRA_IDP: projects/795562109685/locations/global/workloadIdentityPools/github/providers/dev-github-provider
+  GCP_INFRA_GHA_SERVICE_ACCOUNT: dev-github-oauth-sa@rahul-playground-v1.iam.gserviceaccount.com
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      dev_matrix: ${{ steps.dirs.outputs.dev_matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+
+      - name: Install terraform-config-inspect
+        run: go install github.com/hashicorp/terraform-config-inspect@latest
+
+      - name: Get changed files
+        id: changed-files
+        if: github.event_name == 'push'
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            infrastructure/IAC/Terraform/**
+          write_output_files: true
+          json: true
+          escape_json: false
+
+      - name: "Generate matrix"
+        id: dirs
+        run: |
+          # Add GOBIN to PATH
+          export PATH=$PATH:$(go env GOPATH)/bin
+
+          matrix_content="[]"
+
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "Manual run detected."
+
+            ARGS="--output matrix"
+            if [ "${{ inputs.stacks }}" == "all" ]; then
+               ARGS="$ARGS --all"
+            else
+               ARGS="$ARGS --targets ${{ inputs.stacks }}"
+            fi
+
+            if [ -n "${{ inputs.environment }}" ]; then
+               ARGS="$ARGS --env ${{ inputs.environment }}"
+            fi
+
+            echo "Running with args: $ARGS"
+            python3 scripts/tf_dep_map.py $ARGS > matrix.json
+            
+            matrix_content=$(cat matrix.json)
+          elif [ -f ".github/outputs/all_changed_files.json" ]; then
+            echo "Changed files found:"
+            cat .github/outputs/all_changed_files.json
+            
+            # Run the dependency mapper
+            python3 scripts/tf_dep_map.py \
+              --changed-files .github/outputs/all_changed_files.json \
+              --output matrix > matrix.json
+            
+            matrix_content=$(cat matrix.json)
+          fi
+
+          echo "Generated Matrix:"
+          echo "$matrix_content"
+
+          if [ "$matrix_content" == "[]" ] || [ -z "$matrix_content" ]; then
+             echo "dev_matrix=[]" >> $GITHUB_OUTPUT
+          else
+             # Split matrix by environment using jq
+             dev_matrix=$(echo "$matrix_content" | jq -c '[.[] | select(.env == "dev")]')
+             
+             echo "dev_matrix=${dev_matrix}" >> $GITHUB_OUTPUT
+          fi
+
+  terraform-apply-dev:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.dev_matrix != '[]'
+    uses: ./.github/workflows/reusable-terraform-apply.yaml
+    with:
+      matrix: ${{ needs.detect-changes.outputs.dev_matrix }}
+      environment: "dev"
+      GCP_PROJECT_DEV: ${{ env.GCP_PROJECT_DEV }}
+      GCP_INFRA_IDP: ${{ env.GCP_INFRA_IDP }}
+      GCP_INFRA_GHA_SERVICE_ACCOUNT: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}

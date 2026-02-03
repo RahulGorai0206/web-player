@@ -1,0 +1,85 @@
+name: "Reusable Terraform Plan"
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      GCP_PROJECT_DEV:
+        required: false
+      GCP_INFRA_IDP:
+        required: false
+      GCP_INFRA_GHA_SERVICE_ACCOUNT:
+        required: false
+
+permissions:
+  contents: "read"
+  id-token: "write"
+  pull-requests: write
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      max-parallel: 50
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Google Cloud (Dev)
+        if: inputs.environment == 'dev'
+        uses: "google-github-actions/auth@v2"
+        with:
+          token_format: access_token
+          access_token_lifetime: 900s
+          project_id: ${{ inputs.GCP_PROJECT_DEV }}
+          workload_identity_provider: ${{ inputs.GCP_INFRA_IDP }}
+          service_account: ${{ inputs.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
+
+      - name: "Terraform Init for ${{ matrix.dir }}"
+        id: init
+        working-directory: ${{ matrix.dir }}
+        run: terraform init
+
+      - name: "Terraform Plan for ${{ matrix.dir }}"
+        id: plan
+        working-directory: ${{ matrix.dir }}
+        continue-on-error: true
+        env:
+          TF_INPUT: false
+        run: |
+          set -o pipefail
+          terraform plan -lock=false -no-color -detailed-exitcode | tee plan_output.txt
+
+      - name: Check for prevent_destroy Violation
+        if: steps.plan.outcome == 'failure'
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if grep -q "lifecycle.prevent_destroy set, but the plan calls for this resource to be destroyed" plan_output.txt; then
+            echo "❌ ERROR: A resource with 'prevent_destroy = true' is planned for destruction."
+            echo "::error title=Prevent Destroy Violation Detected::The plan would destroy a protected resource. This action is blocked."
+            exit 1
+          else
+            echo "❌ ERROR: Terraform plan failed for a reason other than a prevent_destroy violation. See the plan output below for details."
+            echo "::error title=Terraform Plan Failed::The terraform plan step failed. Check the logs for details."
+            exit 1
+          fi

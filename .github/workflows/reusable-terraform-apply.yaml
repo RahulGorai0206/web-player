@@ -1,0 +1,57 @@
+name: "Reusable Terraform Apply"
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      GCP_PROJECT_DEV:
+        required: false
+      GCP_INFRA_IDP:
+        required: false
+      GCP_INFRA_GHA_SERVICE_ACCOUNT:
+        required: false
+
+permissions:
+  contents: "read"
+  id-token: "write"
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Authenticate to Google Cloud (Dev)
+        if: inputs.environment == 'dev'
+        uses: "google-github-actions/auth@v2"
+        with:
+          token_format: access_token
+          access_token_lifetime: 900s
+          project_id: ${{ inputs.GCP_PROJECT_DEV }}
+          workload_identity_provider: ${{ inputs.GCP_INFRA_IDP }}
+          service_account: ${{ inputs.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
+
+      - name: "Terraform Init for ${{ matrix.dir }}"
+        id: init
+        working-directory: ${{ matrix.dir }}
+        run: terraform init
+
+      - name: "Terraform Apply for ${{ matrix.dir }}"
+        id: apply
+        working-directory: ${{ matrix.dir }}
+        run: terraform apply -auto-approve
