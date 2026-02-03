@@ -1,0 +1,81 @@
+name: Build and (Optionally) Push Audit Migration Image
+
+on:
+  workflow_call:
+    inputs:
+      push-to-registry:
+        description: 'Whether to push the app image to artifact registry.'
+        type: boolean
+        required: false
+        default: true
+      gcp-project-id:
+        type: string
+        required: false
+        default: "rahul-playground-v1"
+      cloudrun_job_name:
+        description: "Cloud Run Job name."
+        type: string
+        required: true
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+env:
+  APP_ARTIFACT_REGISTRY_URL: us-east4-docker.pkg.dev/rahul-playground-v1/dev-us-east4-federation-cloud-cinema-gar
+  APP_IMAGE_NAME: robin-graphql-audit
+  APP_NAME: audit
+
+jobs:
+  build_and_push_image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Docker login to GAR
+      #   uses: robinpowered/github-actions/.github/actions/setup-docker-login@setup-docker-login/v2.0.0
+      #   with:
+      #     registry-type: 'GAR'
+      #     workload-identity-provider: ${{ vars.GCP_IDP_DEV }}
+      #     gcp-service-account: ${{ vars.GCP_OAUTH_SA_DEV }}
+      #     access-token-lifetime: "1800s"
+
+      - name: Generate revision tag
+        id: get_tag
+        shell: bash
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          SLUG=$(sed 's/[^a-zA-Z0-9]/-/g' <<< "$BRANCH_NAME")
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TAG="${SLUG}-${SHORT_SHA}"
+          echo "Generated tag: $TAG"
+          echo "revision_tag=${TAG,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Migration Job Image - Build and (optionally) push
+        id: build_migration_image
+        uses: docker/build-push-action@v6.18.0
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: ${{ env.APP_ARTIFACT_REGISTRY_URL }}/${{ env.APP_IMAGE_NAME }}:${{ steps.get_tag.outputs.revision_tag }}
+          platforms: linux/amd64
+          provenance: false
+          push: ${{ inputs.push-to-registry }}
+          cache-to: type=gha,mode=max
+          cache-from: type=gha
+
+      # - name: Deploy to Cloud Run Job in GCP project
+      #   uses: robinpowered/github-actions/.github/actions/cloudrun-job-deploy@cloudrun-job-deploy/v2
+      #   with:
+      #     gcp-project-id: ${{ inputs.gcp-project-id }}
+      #     job-name: ${{ inputs.cloudrun_job_name }}
+      #     job-image: ${{ env.APP_ARTIFACT_REGISTRY_URL }}/${{ env.APP_IMAGE_NAME }}:migration-${{ steps.get_tag.outputs.revision_tag }}
+      #     job-location: ${{ steps.determine_job_location.outputs.job_location }}
+      #     workload-identity-provider: ${{ vars.GCP_IDP_DEV }}
+      #     async-deploy: true
+      #     execute-job: true
