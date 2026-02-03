@@ -343,14 +343,14 @@ class TerraformDependencyMapper:
         """
         Filter nodes to only return those that are 'root' modules meant to be applied.
         Criteria:
-        1. Must be in infrastructure/IAC/Terraform/
+        1. Must be in infrastructure/IAC/Terraform/env/
         2. Must NOT be in a 'modules' subdirectory relative to the env root.
         3. Must contain a 'backend.tf' file (strong indicator of a root module).
         """
         targets = []
         for node in nodes:
             # 1. Basic path check
-            if not node.startswith("infrastructure/IAC/Terraform/"):
+            if not node.startswith("infrastructure/IAC/Terraform/env/"):
                 continue
             
             # 2. 'modules' check

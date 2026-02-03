@@ -1,5 +1,5 @@
 module "artifact_registry" {
-  source           = "../../modules/artifact-registry"
+  source           = "../../../modules/artifact-registry"
   for_each         = var.repo
   region_name      = each.value.region
   project_id       = var.project_id
