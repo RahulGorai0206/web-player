@@ -31,25 +31,12 @@ cloud_run = {
           }
         }
         startup_probe = {
-          initial_delay_seconds = 0
-          timeout_seconds       = 1
-          period_seconds        = 1
-          failure_threshold     = 120
-          http_get = {
-            path         = "/_statusz"
+          initial_delay_seconds = 30
+          timeout_seconds       = 240
+          period_seconds        = 240
+          failure_threshold     = 2
+          tcpSocket = {
             port         = 5500
-            http_headers = []
-          }
-        }
-        liveness_probe = {
-          initial_delay_seconds = 10
-          timeout_seconds       = 120
-          period_seconds        = 120
-          failure_threshold     = 3
-          http_get = {
-            path         = "/_healthz"
-            port         = 5500
-            http_headers = []
           }
         }
       }
