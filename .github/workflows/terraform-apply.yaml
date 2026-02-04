@@ -30,8 +30,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-        # with:
-        #   fetch-depth: 0
+        with:
+          ref: master
+          fetch-depth: 0
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -110,5 +111,5 @@ jobs:
       matrix: ${{ needs.detect-changes.outputs.dev_matrix }}
       environment: "dev"
       GCP_PROJECT_DEV: "rahul-playground-v1"
-      GCP_INFRA_IDP: "projects/795562109685/locations/global/workloadIdentityPools/github/providers/dev-github-providerr"
+      GCP_INFRA_IDP: "projects/795562109685/locations/global/workloadIdentityPools/github/providers/dev-github-provider"
       GCP_INFRA_GHA_SERVICE_ACCOUNT: "dev-github-oauth-sa@rahul-playground-v1.iam.gserviceaccount.com"
