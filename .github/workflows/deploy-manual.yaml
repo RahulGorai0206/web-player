@@ -13,6 +13,11 @@ on:
         type: string
         required: false
         default: "cloud-cinema"
+      cloudrun_location:
+        description: "Cloud Run Service location."
+        type: string
+        required: false
+        default: "asia-south2"
 
 permissions:
   contents: 'read'
@@ -24,3 +29,4 @@ jobs:
     with:
       gcp-project-id: ${{ inputs.gcp-project-id }}
       cloudrun_name: ${{ inputs.cloudrun_name }}
+      cloudrun_location: ${{ inputs.cloudrun_location }}

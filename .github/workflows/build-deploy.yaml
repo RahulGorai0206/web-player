@@ -5,10 +5,13 @@ on:
     inputs:
       gcp-project-id:
         type: string
-        required: false
-        default: "rahul-playground-v1"
+        required: true
       cloudrun_name:
-        description: "Cloud Run Job name."
+        description: "Cloud Run service name."
+        type: string
+        required: true
+      cloudrun_location:
+        description: "Cloud Run service location."
         type: string
         required: true
 
@@ -17,9 +20,10 @@ permissions:
   id-token: 'write'
 
 env:
-  APP_ARTIFACT_REGISTRY_URL: us-east4-docker.pkg.dev/rahul-playground-v1/cloud-cinema-gar
-  APP_IMAGE_NAME: google-graphql-cloud-cinema
-  APP_NAME: cloud-cinema
+  GCP_INFRA_IDP: projects/795562109685/locations/global/workloadIdentityPools/github/providers/dev-github-provider
+  GCP_INFRA_GHA_SERVICE_ACCOUNT: dev-github-oauth-sa@rahul-playground-v1.iam.gserviceaccount.com
+  APP_ARTIFACT_REGISTRY_URL: asia-south2-docker.pkg.dev/rahul-playground-v1/dev-player-images-gar
+  APP_IMAGE_NAME: cloud-cinema
 
 jobs:
   build_and_push_image:
@@ -32,8 +36,8 @@ jobs:
         uses: rahulgorai0206/github-actions/.github/actions/setup-docker-login@master
         with:
           registry-type: 'GAR'
-          workload-identity-provider: ${{ vars.GCP_IDP_DEV }}
-          gcp-service-account: ${{ vars.GCP_OAUTH_SA_DEV }}
+          workload-identity-provider: ${{ env.GCP_INFRA_IDP }}
+          gcp-service-account: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
           access-token-lifetime: "1800s"
 
       - name: Generate revision tag
@@ -68,7 +72,8 @@ jobs:
         uses: rahulgorai0206/github-actions/.github/actions/cloudrun-deploy@master
         with:
           gcp-project-id: ${{ inputs.gcp-project-id }}
-          job-name: ${{ inputs.cloudrun_name }}
-          job-image: ${{ env.APP_ARTIFACT_REGISTRY_URL }}/${{ env.APP_IMAGE_NAME }}:migration-${{ steps.get_tag.outputs.revision_tag }}
-          job-location: ${{ env.location }}
-          workload-identity-provider: ${{ env.GCP_IDP_DEV }}
+          service-name: ${{ inputs.cloudrun_name }}
+          service-image: ${{ env.APP_ARTIFACT_REGISTRY_URL }}/${{ env.APP_IMAGE_NAME }}:${{ steps.get_tag.outputs.revision_tag }}
+          service-location: ${{ inputs.cloudrun_location }}
+          workload-identity-provider: ${{ env.GCP_INFRA_IDP }}
+          gcp-service-account: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
