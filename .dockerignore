@@ -4,3 +4,4 @@ downloads
 .git
 .env
 venv
+.venv
