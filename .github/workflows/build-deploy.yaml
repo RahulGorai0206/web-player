@@ -39,6 +39,7 @@ jobs:
           workload-identity-provider: ${{ env.GCP_INFRA_IDP }}
           gcp-service-account: ${{ env.GCP_INFRA_GHA_SERVICE_ACCOUNT }}
           access-token-lifetime: "1800s"
+          gcp-region: "asia-south2"
 
       - name: Generate revision tag
         id: get_tag
