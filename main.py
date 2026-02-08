@@ -98,12 +98,12 @@ LANDING_TEMPLATE = """
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Python Cinema</h1>
+        <h1>🚀 Stream Videos</h1>
         <p>Enter Video URL or Zip URL</p>
         
         <form id="dlForm">
-            <input type="text" id="urlInput" name="url" placeholder="https://example.com/movie.mp4" required autocomplete="off">
-            <button type="submit" id="dlBtn">LOAD CONTENT</button>
+            <input type="text" id="urlInput" name="url" placeholder="https://example.com/video.mp4" required autocomplete="off">
+            <button type="submit" id="dlBtn">LOAD VIDEO</button>
         </form>
 
         <div id="progressArea">
@@ -187,7 +187,7 @@ SELECTION_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h2>📂 Available Media</h2>
+    <h2>📂 Available Files</h2>
     {% for file in files %}
     <div class="file-card">
         <div class="name"><i class="fas fa-film"></i> {{ file.name }}</div>
