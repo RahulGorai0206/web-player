@@ -80,7 +80,7 @@ LANDING_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Python Cinema - Loader</title>
+    <title>Stream Videos - Loader</title>
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: #1f1f1f; padding: 40px; border-radius: 8px; border: 1px solid #333; width: 500px; text-align: center; }
@@ -208,7 +208,7 @@ ADVANCED_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Python Cinema (Advanced)</title>
+    <title>Stream Videos (Advanced)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -244,7 +244,7 @@ ADVANCED_TEMPLATE = """
     </style>
 </head>
 <body class="ui-visible">
-    <header id="topBar"><h3>🚀 Advanced Cinema</h3><a href="/list_files" class="btn-file">📂 Menu</a></header>
+    <header id="topBar"><h3>🚀 Advanced Player</h3><a href="/list_files" class="btn-file">📂 Menu</a></header>
     <div class="video-container" id="mainContainer">
         <div class="loading-overlay" id="loadingSpinner"><div class="spinner"></div></div>
         <div class="sync-msg" id="syncMsg">Subtitle Delay: 0ms</div>
@@ -403,7 +403,7 @@ SIMPLE_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Python Cinema (Simple)</title>
+    <title>Stream Videos (Simple)</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* Exact copy of Advanced CSS */
@@ -437,7 +437,7 @@ SIMPLE_TEMPLATE = """
     </style>
 </head>
 <body class="ui-visible">
-    <header id="topBar"><h3>⚡ Simple Cinema</h3><a href="/list_files" class="btn-file">📂 Menu</a></header>
+    <header id="topBar"><h3>⚡ Simple player</h3><a href="/list_files" class="btn-file">📂 Menu</a></header>
     <div class="video-container" id="mainContainer">
         <div class="loading-overlay" id="loadingSpinner"><div class="spinner"></div></div>
         
