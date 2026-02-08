@@ -11,6 +11,7 @@ import shutil
 import re
 import mimetypes
 from flask import Flask, Response, request, render_template_string, redirect, url_for, send_file, jsonify
+from urllib.parse import unquote, urlparse
 from waitress import serve
 
 # --- LOGGING ---
@@ -636,25 +637,50 @@ def process_url():
     if os.path.exists(DOWNLOAD_DIR): shutil.rmtree(DOWNLOAD_DIR)
     os.makedirs(DOWNLOAD_DIR)
 
-    filename = url.split('/')[-1] or "downloaded_file"
+    # --- FIX STARTS HERE ---
+    try:
+        # 1. Parse the URL to get the path without query parameters
+        parsed_url = urlparse(url)
+        
+        # 2. Get the last segment of the path (the actual file name)
+        # unquote() converts "The%20Astronaut" -> "The Astronaut"
+        filename = unquote(os.path.basename(parsed_url.path))
+        
+        # 3. Fallback if filename is empty
+        if not filename:
+            filename = "downloaded_file"
+
+        # 4. Safety truncate: Ensure filename isn't over 200 chars just in case
+        if len(filename) > 200:
+            name, ext = os.path.splitext(filename)
+            filename = name[:200-len(ext)] + ext
+
+    except Exception as e:
+        filename = "downloaded_file"
+    # --- FIX ENDS HERE ---
+
     save_path = os.path.join(DOWNLOAD_DIR, filename)
     download_state['filename'] = filename
 
     try:
         # Download with Progress Tracking
         download_state['msg'] = 'Starting Download...'
-        with requests.get(url, stream=True) as r:
+        # headers added to mimic a browser, often helps with direct download links
+        headers = {'User-Agent': 'Mozilla/5.0'} 
+        
+        with requests.get(url, stream=True, headers=headers) as r:
             r.raise_for_status()
             total_length = int(r.headers.get('content-length', 0))
             dl = 0
             with open(save_path, 'wb') as f:
                 for chunk in r.iter_content(chunk_size=8192):
-                    dl += len(chunk)
-                    f.write(chunk)
-                    if total_length > 0:
-                        percent = int((dl / total_length) * 100)
-                        download_state['progress'] = percent
-                        download_state['msg'] = f"Downloading: {percent}%"
+                    if chunk:
+                        dl += len(chunk)
+                        f.write(chunk)
+                        if total_length > 0:
+                            percent = int((dl / total_length) * 100)
+                            download_state['progress'] = percent
+                            download_state['msg'] = f"Downloading: {percent}%"
         
         download_state['progress'] = 100
         
@@ -671,6 +697,7 @@ def process_url():
         return jsonify({'status': 'ok'})
 
     except Exception as e:
+        logger.error(f"Download Error: {e}")
         download_state['status'] = 'Error'
         download_state['msg'] = str(e)
         return jsonify({'status': 'error', 'message': str(e)})
